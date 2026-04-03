@@ -74,8 +74,9 @@ The foundational stage. Learn how single neurons work and how to translate real-
     *   **Key APIs:** `spikegen.rate`, `spikegen.latency`.
 
 *   [ ] **`03_population_coding.py`**: **Robustness via Numbers**
-    *   **Concept:** In biology, a single neuron is unreliable. "Population coding" uses a group of neurons to represent a single value, increasing resolution and noise tolerance.
-    *   **Objective:** Use `snntorch.spikegen.delta` to encode a continuous signal into a population of neurons. Observe how the "Delta" threshold affects the density of spikes.
+    *   **Concept:** "Population coding" uses a group of neurons to represent a single value.
+    *   **Objective:** Use `snntorch.spikegen.delta` to encode a signal.
+    *   **Akida Cross-Check:** Use the `akida` SDK (Simulator) to visualize how the AKD1000's digital "Events" differ from floating-point "Spikes."
     *   **Deep Dive:** [Theoretical Neuroscience (Dayan & Abbott) - Population Codes](http://www.rctn.org/bruno/public/dayan_abbott_ch3.pdf).
     *   **Key APIs:** `spikegen.delta`.
 
@@ -97,6 +98,7 @@ Transitioning from isolated neurons to deep architectures and addressing the cha
 *   [ ] **`06_feedforward_snn.py`**: **Connecting Neurons with PyTorch**
     *   **Concept:** snnTorch neurons act as activation functions that integrate over time.
     *   **Objective:** Build a 2-layer Fully Connected SNN using `nn.Sequential`.
+    *   **Akida Cross-Check:** Map this network to the Akida NPU mesh. See how neurons are distributed across the hardware's 20 NPUs using the simulator.
     *   **Deep Dive:** [Tutorial 3: Feedforward SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_3.html).
     *   **Key APIs:** `nn.Linear`, `snn.Leaky`, `snntorch.utils.reset`.
 
@@ -112,47 +114,66 @@ Transitioning from isolated neurons to deep architectures and addressing the cha
     *   **Deep Dive:** [snnTorch Paper - Section III: Training Algorithms](https://arxiv.org/pdf/2109.12894.pdf).
     *   **Key APIs:** `snntorch.functional.ce_rate_loss`, `snntorch.functional.acc`.
 
-### Part 3: Advanced Architectures & Neuromorphic Datasets
+### Part 3: Advanced Architectures & High-Resolution Datasets
+Scaling SNNs to complex spatial patterns and native event-based sensors using high-performance hardware.
 
-*   [ ] **`09_convolutional_snn.py`**: **Spatial Features (CSNNs)**
-    *   **Concept:** Combining CNNs with temporal spiking dynamics.
-    *   **Objective:** Build a CSNN for MNIST. Compare parameter efficiency vs. Lesson 06.
-    *   **Deep Dive:** [Tutorial 6: Convolutional SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_6.html).
-    *   **Key APIs:** `nn.Conv2d`.
+*   [ ] **`09_convolutional_snn.py`**: **Spiking ResNets (CIFAR-10)**
+    *   **Concept:** MNIST is too small for high-end GPUs. Real-world SNNs use Deep Residual Networks.
+    *   **Objective:** Build a **Spiking ResNet-18** architecture. Train it on the **CIFAR-10** dataset. Compare the "Spike Sparsity" of different layers in a deep network.
+    *   **Deep Dive:** [Tutorial 6: Convolutional SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_6.html) and [Spiking ResNets (Fang et al., 2021)](https://arxiv.org/abs/2102.04159).
+    *   **Key APIs:** `nn.Conv2d`, `snn.Leaky`.
 
-*   [ ] **`10_neuromorphic_data_tonic.py`**: **Event-Based Cameras (DVS)**
-    *   **Concept:** DVS cameras naturally output sparse events.
-    *   **Objective:** Use `Tonic` to load N-MNIST. Feed native events into your CSNN.
+*   [ ] **`10_neuromorphic_data_tonic.py`**: **High-Res Event Cameras (DVS128)**
+    *   **Concept:** DVS cameras naturally output sparse events. High-resolution DVS data requires massive temporal unrolling.
+    *   **Objective:** Use `Tonic` to load the **DVS128 Gesture** dataset ($128 \times 128$ resolution). Train a 3D-CSNN to recognize human gestures in real-time.
     *   **Deep Dive:** [Tutorial 7: Neuromorphic Datasets](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html).
-    *   **Key APIs:** `tonic.datasets.NMNIST`.
+    *   **Key APIs:** `tonic.datasets.DVSGesture`.
 
-*   [ ] **`11_recurrent_snn.py`**: **Temporal Memory (RSNNs)**
+*   [ ] **`11_recurrent_snn.py`**: **Long-Term Temporal Memory**
     *   **Concept:** Explicit recurrent weights for complex temporal dynamics.
-    *   **Objective:** Implement `snn.RLeaky`. Train it to recognize a sequence.
+    *   **Objective:** Implement `snn.RLeaky`. Train it on the **Sequential MNIST** task (pixels fed 1-by-1) to push the limits of temporal integration.
     *   **Deep Dive:** [snnTorch Documentation: Recurrent Layers](https://snntorch.readthedocs.io/en/latest/snntorch.html#recurrent-layers).
 
-### Part 4: Optimization & Local Learning
+### Part 4: Optimization, Scaling & Local Learning
 
 *   [ ] **`12_loss_and_regularization.py`**: **Sparsity & Power Efficiency**
     *   **Concept:** Penalize excessive firing to improve energy efficiency.
-    *   **Objective:** Add L1/L2 spike regularization to your training loop.
+    *   **Objective:** Add L1/L2 spike regularization to your Spiking ResNet. Visualize the "Energy-Accuracy" frontier.
     *   **Deep Dive:** [snnTorch Documentation: Regularization](https://snntorch.readthedocs.io/en/latest/snntorch.functional.html#regularization).
 
-*   [ ] **`13_stdp_online_learning.py`**: **STDP Plasticity**
-    *   **Concept:** Local learning: "Neurons that fire together wire together."
-    *   **Objective:** Implement unsupervised STDP weight updates.
-    *   **Deep Dive:** [snn.stdp Documentation](https://snntorch.readthedocs.io/en/latest/snntorch.stdp.html).
-    *   **Key APIs:** `snntorch.stdp.STDP`.
+*   [ ] **`13_stdp_online_learning.py`**: **STDP vs. Incremental Learning**
+    *   **Concept:** Biological STDP vs. Industrial "One-Shot" learning.
+    *   **Objective:** Implement unsupervised STDP in `snnTorch`.
+    *   **Akida Parallel:** Use the Akida card's native **Incremental Learning** to "learn" a new data class (e.g., a new gesture) in one-shot without a training loop.
+    *   **Deep Dive:** [Akida Learning Whitepaper](https://brainchip.com/akida-learning/).
 
-*   [ ] **`14_ann_to_snn.py`**: **Conversion vs. Training**
-    *   **Concept:** Fast-track SNN development by converting pre-trained ANNs.
-    *   **Objective:** Convert a ReLU-CNN to an SNN and compare performance.
+*   [ ] **`14_ann_to_snn.py`**: **Deep Model Conversion**
+    *   **Concept:** Fast-track SNN development by converting pre-trained deep ANNs.
+    *   **Objective:** Convert a pre-trained **VGG-16** or **Inception** model to an SNN and compare performance on ImageNet-1K (subset).
     *   **Deep Dive:** [snnTorch Documentation: ANN-to-SNN](https://snntorch.readthedocs.io/en/latest/snntorch.utils.html#ann-to-snn-conversion).
 
 *   [ ] **`15_energy_and_export.py`**: **SynOps & NIR Export**
     *   **Concept:** Measure energy (Synaptic Operations) and export to hardware (NIR).
-    *   **Objective:** Benchmark your CSNN and export to `.nir` format.
-    *   **Deep Dive:** [NIR Documentation](https://neuromorphic-intermediate-representation.readthedocs.io/).
+    *   **Objective:** Benchmark your Spiking ResNet-18 and export to `.nir` format.
+
+*   [ ] **`16_spiking_transformers.py`**: **The Cutting Edge (SSA)**
+    *   **Concept:** Standard Self-Attention is quadratic. Spiking Self-Attention (SSA) can be linear and ultra-sparse.
+    *   **Objective:** Implement a basic **Spiking Transformer (Spikformer)**. Train it on CIFAR-100 to utilize your 7900 XTX's memory.
+    *   **Deep Dive:** [Spikformer (Zhou et al., 2023)](https://arxiv.org/abs/2211.12681).
+
+*   [ ] **`17_akida_deployment.py`**: **Edge AI with BrainChip Akida**
+    *   **Concept:** Moving from high-power training (GPU) to ultra-low-power inference (AKD1000).
+    *   **Objective:** Take a trained CSNN from Lesson 09. Quantize the weights to 4-bit using `quantizeml`. Convert to Akida format (`.fbz`) and run real-time inference on the AKD1000 M.2 card.
+    *   **Hardware Required:** BrainChip Akida AKD1000 M.2 Card.
+    *   **Deep Dive:** [BrainChip MetaTF Documentation](https://doc.brainchipinc.com/).
+
+---
+
+## 🛠️ Neuromorphic Hardware Stack
+This course supports a heterogeneous hardware environment:
+*   **Training (The Muscle):** **AMD Radeon RX 7900 XTX** (ROCm). Used for deep BPTT and large-scale architectural exploration.
+*   **Deployment (The Brain):** **BrainChip Akida AKD1000**. Used for edge inference, event-based processing, and incremental learning.
+*   **Sensing (The Eyes):** **`v2e` (Video-to-Events) Simulation**. Uses your GPU to generate high-fidelity event streams from standard video files. (Hardware DVS optional).
 
 ---
 
