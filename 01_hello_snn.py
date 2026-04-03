@@ -1,37 +1,52 @@
 import torch
 import snntorch as snn
+import matplotlib.pyplot as plt
 
-def hello_snn():
-    # 1. Define the LIF neuron parameters
-    # beta is the membrane potential decay rate
-    # reset_mechanism="zero" resets the membrane potential to 0 after a spike
-    beta = 0.9  
-    lif = snn.Leaky(beta=beta, reset_mechanism="zero")
+def run_lesson_01():
+    # 1. Define the Neuron
+    # beta is the decay rate. 0.95 means 5% of the membrane potential leaks per step.
+    beta = 0.95
+    lif = snn.Leaky(beta=beta)
 
-    # 2. Create an interleaved spike train (10 steps of 1-0-1-0...) followed by 15 steps of silence
-    num_steps = 25
-    # Create [1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
-    interleaved = torch.tensor([1.0, 0.0] * 5)
-    # Combine with 15 zeros
-    input_spikes = torch.cat((interleaved, torch.zeros(15))).reshape(num_steps, 1, 1)
+    # 2. Create Input: A single spike at t=10
+    num_steps = 200
+    input_current = torch.zeros(num_steps)
+    input_current[10] = 1.0 
 
-    # 3. Initialize membrane potential
-    mem = lif.init_leaky()
+    # 3. Simulation Loop
+    mem = lif.init_leaky() # Initialize membrane potential
+    mem_history = []
+    spike_history = []
 
-    # 4. Simulation loop
-    print(f"Simulating {num_steps} time steps...")
-    spk_count = 0
-    for step in range(num_steps):
-        spk, mem = lif(input_spikes[step], mem)
-        if spk > 0:
-            spk_count += 1
-            print(f"Step {step:2d}: Spike Out! (Mem: {mem.item():.3f})")
-        else:
-            print(f"Step {step:2d}: No spike.  (Mem: {mem.item():.3f})")
+    # --- TODO: [Learning Part] ---
+    # Loop through each time step in input_current.
+    # Pass the current input and previous 'mem' into the 'lif' neuron.
+    # Store the resulting spike and new 'mem' in the history lists.
+    
+    # for x in input_current:
+    #     ... your code here ...
+    
+    # -----------------------------
 
-    print("-" * 30)
-    print(f"Total output spikes: {spk_count}")
-    print("Hello SNN World! snntorch is working correctly.")
+    # 4. Visualization
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(10, 6))
+    
+    # Plot Input Current
+    ax[0].stem(range(num_steps), input_current.numpy(), use_line_collection=True)
+    ax[0].set_ylabel("Input Current")
+    ax[0].set_title("LIF Neuron Response to a Single Spike")
+
+    # Plot Membrane Potential
+    if mem_history:
+        ax[1].plot(range(num_steps), [m.item() for m in mem_history])
+        ax[1].axhline(y=1.0, color='r', linestyle='--', label="Threshold")
+        ax[1].set_ylabel("Membrane Potential (U)")
+        ax[1].set_xlabel("Time Step")
+        ax[1].legend()
+
+    plt.tight_layout()
+    plt.show()
+    print("Simulation complete. Check the plot!")
 
 if __name__ == "__main__":
-    hello_snn()
+    run_lesson_01()
