@@ -56,7 +56,7 @@ uv pip install snntorch matplotlib tonic
 
 ## The Complete snnTorch Course Curriculum
 
-This curriculum is designed as a series of hands-on lessons. You will write the code for each lesson as a standalone Python executable. Each lesson builds upon the previous one.
+This curriculum is designed as a series of hands-on lessons. You will write the code for each lesson as a standalone Python executable. Each lesson builds upon the previous one and concludes with a **short quiz (3-5 questions)** to test your knowledge.
 
 ### Part 1: Spike Encoding, Simulation, and Visualization
 The foundational stage. Learn how single neurons work and how to translate real-world continuous data into binary spikes.
