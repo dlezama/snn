@@ -2,7 +2,21 @@
 
 This repository is dedicated to mastering Spiking Neural Networks (SNNs) using the [snnTorch](https://github.com/jeshraghian/snntorch) library. The goal is to build deep intuition and practical skills in neuromorphic computing, spike-based communication, and training SNNs using surrogate gradients and advanced training algorithms.
 
-**Official Documentation Reference:** [snnTorch ReadTheDocs](https://snntorch.readthedocs.io/)
+---
+
+## 🧠 The Neuromorphic Mindset: Time vs. Space
+Standard Deep Learning is largely **spatial**—information is processed in parallel snapshots (images, word embeddings). Neuromorphic computing is **temporal**. 
+*   **Information is in the Timing:** A single spike has no value; the *time* it arrives relative to others is everything.
+*   **Memory is Internal:** Every neuron has a "membrane potential" that acts as a short-term memory of previous inputs.
+*   **Sparsity is Efficiency:** In SNNs, "silence is golden." If nothing is happening, no energy is consumed.
+
+---
+
+## 📚 Core Theory & Reading List
+Before diving into code, it is highly recommended to skim these foundational resources:
+1.  **The Bible of SNNs:** [Neuronal Dynamics (Gerstner et al.)](https://neuronaldynamics.epfl.ch/) - Specifically Chapter 1 (LIF models).
+2.  **The snnTorch Paper:** [Eshraghian et al. (2021) - "snnTorch: Deep Learning with Spiking Neural Networks"](https://arxiv.org/abs/2109.12894) - The definitive guide to the library's design and surrogate gradients.
+3.  **Surrogate Gradients:** [Neftci et al. (2019) - "Surrogate Gradient Learning in Spiking Neural Networks"](https://arxiv.org/abs/1901.09948).
 
 ---
 
@@ -50,112 +64,100 @@ The foundational stage. Learn how single neurons work and how to translate real-
 *   [x] **`01_hello_snn.py`**: **The Leaky Integrate-and-Fire (LIF) Neuron**
     *   **Concept:** The biological mechanism of membrane potential, leak, integration, threshold, and refractory reset.
     *   **Objective:** Simulate a single `snntorch.Leaky` neuron. Pass a hardcoded spike train and observe the membrane potential decay.
+    *   **Deep Dive:** [Tutorial 2: LIF Neuron](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_2.html) and [Neuronal Dynamics: The LIF Model](https://neuronaldynamics.epfl.ch/online/Ch1.S3.html).
     *   **Key APIs:** `snn.Leaky`, `lif.init_leaky()`, `lif(input, mem)`.
-    *   **Reference:** [Tutorial 2: LIF Neuron](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_2.html)
 
 *   [ ] **`02_spike_encoding.py`**: **Data to Spikes (Spikegen)**
-    *   **Concept:** Artificial neural networks take continuous values (like pixel intensity). SNNs require temporal binary data.
-    *   **Objective:** Load the MNIST dataset (using `torchvision`). Use `snntorch.spikegen` to convert a static image into a temporal spike train using Rate Coding, Latency Coding, and Delta Modulation.
-    *   **Key APIs:** `spikegen.rate`, `spikegen.latency`, `spikegen.delta`.
-    *   **Reference:** [Tutorial 1: Spike Encoding](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_1.html)
+    *   **Concept:** SNNs require temporal binary data. We can encode a static image into a spike train using Rate or Latency.
+    *   **Objective:** Load MNIST. Use `snntorch.spikegen` to convert a static image into a temporal spike train using Rate and Latency coding.
+    *   **Deep Dive:** [Tutorial 1: Spike Encoding](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_1.html).
+    *   **Key APIs:** `spikegen.rate`, `spikegen.latency`.
 
-*   [ ] **`03_spike_visualization.py`**: **Plotting SNN Activity**
+*   [ ] **`03_population_coding.py`**: **Robustness via Numbers**
+    *   **Concept:** In biology, a single neuron is unreliable. "Population coding" uses a group of neurons to represent a single value, increasing resolution and noise tolerance.
+    *   **Objective:** Use `snntorch.spikegen.delta` to encode a continuous signal into a population of neurons. Observe how the "Delta" threshold affects the density of spikes.
+    *   **Deep Dive:** [Theoretical Neuroscience (Dayan & Abbott) - Population Codes](http://www.rctn.org/bruno/public/dayan_abbott_ch3.pdf).
+    *   **Key APIs:** `spikegen.delta`.
+
+*   [ ] **`04_spike_visualization.py`**: **Plotting SNN Activity**
     *   **Concept:** Debugging SNNs requires temporal visualization.
-    *   **Objective:** Take the spike trains generated in Lesson 02 and visualize them using `snntorch.spikeplot`. Create a raster plot and a membrane potential trace.
+    *   **Objective:** Take the spike trains generated in previous lessons and visualize them using `snntorch.spikeplot`. Create a raster plot and a membrane potential trace.
+    *   **Deep Dive:** [Tutorial 1 & 2 Visualization](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_1.html).
     *   **Key APIs:** `spikeplot.raster`, `spikeplot.traces`, `spikeplot.animator`.
-    *   **Reference:** [Tutorial 1 & 2 Visualization](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_1.html)
 
-*   [ ] **`04_synaptic_currents.py`**: **2nd-Order Neuron Models**
-    *   **Concept:** Real neurons don't instantly jump in voltage when hit by a spike. Neurotransmitters create a slow synaptic conductance wave.
-    *   **Objective:** Upgrade from the 1st-order `Leaky` neuron to the 2nd-order `Synaptic` neuron. Observe the interplay between the synaptic decay (`alpha`) and membrane decay (`beta`).
+*   [ ] **`05_synaptic_currents.py`**: **2nd-Order Neuron Models**
+    *   **Concept:** Real neurons have a slow synaptic conductance wave.
+    *   **Objective:** Upgrade from `Leaky` to `Synaptic` neurons. Observe the interplay between `alpha` (synaptic decay) and `beta` (membrane decay).
+    *   **Deep Dive:** [Tutorial 4: 2nd Order Models](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_4.html).
     *   **Key APIs:** `snn.Synaptic`, `lif.init_synaptic()`.
-    *   **Reference:** [Tutorial 4: 2nd Order Models](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_4.html)
 
 ### Part 2: Building & Training Feedforward Networks
-Transitioning from isolated neurons to deep architectures and addressing the fundamental challenge of training SNNs.
+Transitioning from isolated neurons to deep architectures and addressing the challenge of gradients.
 
-*   [ ] **`05_feedforward_snn.py`**: **Connecting Neurons with PyTorch**
-    *   **Concept:** snnTorch neurons act as activation functions. They can be seamlessly integrated with PyTorch's `nn.Linear` layers.
-    *   **Objective:** Build a 2-layer Fully Connected SNN using `nn.Sequential`. Pass an encoded MNIST image through the network.
+*   [ ] **`06_feedforward_snn.py`**: **Connecting Neurons with PyTorch**
+    *   **Concept:** snnTorch neurons act as activation functions that integrate over time.
+    *   **Objective:** Build a 2-layer Fully Connected SNN using `nn.Sequential`.
+    *   **Deep Dive:** [Tutorial 3: Feedforward SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_3.html).
     *   **Key APIs:** `nn.Linear`, `snn.Leaky`, `snntorch.utils.reset`.
-    *   **Reference:** [Tutorial 3: Feedforward SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_3.html)
 
-*   [ ] **`06_surrogate_gradients.py`**: **The Dead Neuron Problem**
-    *   **Concept:** The Heaviside step function used to generate a spike has a derivative of zero almost everywhere. Backpropagation fails because gradients vanish. Surrogate gradients replace the step function's derivative with a smooth approximation during the backward pass.
-    *   **Objective:** Implement different surrogate gradients and observe how they wrap the spiking mechanism.
-    *   **Key APIs:** `snntorch.surrogate.atan`, `snntorch.surrogate.sigmoid`, `snntorch.surrogate.fast_sigmoid`.
-    *   **Reference:** [Tutorial 5: Surrogate Gradients](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_5.html)
+*   [ ] **`07_surrogate_gradients.py`**: **The Dead Neuron Problem**
+    *   **Concept:** The spike function derivative is zero. Surrogate gradients provide a smooth approximation for backprop.
+    *   **Objective:** Implement `atan` and `fast_sigmoid` surrogates.
+    *   **Deep Dive:** [Tutorial 5: Surrogate Gradients](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_5.html) and [Neftci et al. (2019)](https://arxiv.org/abs/1901.09948).
+    *   **Key APIs:** `snntorch.surrogate.atan`, `snntorch.surrogate.fast_sigmoid`.
 
-*   [ ] **`07_training_bptt.py`**: **Backpropagation Through Time (BPTT)**
-    *   **Concept:** Training SNNs requires unrolling the network over time steps.
-    *   **Objective:** Write a complete PyTorch training loop for the network built in Lesson 05. Use CrossEntropyLoss applied to the total spike count (rate coding) of the output layer to classify MNIST digits.
+*   [ ] **`08_training_bptt.py`**: **Backpropagation Through Time (BPTT)**
+    *   **Concept:** SNNs are trained by unrolling them over time steps.
+    *   **Objective:** Train the network on MNIST. **Crucial:** Normalize inputs to $[0, 1]$ to avoid spike saturation.
+    *   **Deep Dive:** [snnTorch Paper - Section III: Training Algorithms](https://arxiv.org/pdf/2109.12894.pdf).
     *   **Key APIs:** `snntorch.functional.ce_rate_loss`, `snntorch.functional.acc`.
-    *   **Reference:** [Tutorial 5: Training SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_5.html)
 
 ### Part 3: Advanced Architectures & Neuromorphic Datasets
-Applying SNNs to spatial data and native event-based sensors.
 
-*   [ ] **`08_convolutional_snn.py`**: **Spatial Features (CSNNs)**
-    *   **Concept:** SNNs can utilize weight-sharing just like standard CNNs.
-    *   **Objective:** Replace `nn.Linear` with `nn.Conv2d` and `nn.MaxPool2d` to build a Convolutional SNN. Train it on MNIST and compare parameter counts/accuracy against the fully connected version.
-    *   **Key APIs:** `nn.Conv2d`, integrating SNN layers with CNN layers.
-    *   **Reference:** [Tutorial 6: CSNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_6.html)
+*   [ ] **`09_convolutional_snn.py`**: **Spatial Features (CSNNs)**
+    *   **Concept:** Combining CNNs with temporal spiking dynamics.
+    *   **Objective:** Build a CSNN for MNIST. Compare parameter efficiency vs. Lesson 06.
+    *   **Deep Dive:** [Tutorial 6: Convolutional SNNs](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_6.html).
+    *   **Key APIs:** `nn.Conv2d`.
 
-*   [ ] **`09_neuromorphic_data_tonic.py`**: **Event-Based Cameras (DVS)**
-    *   **Concept:** Spikegen is slow and artificial. Neuromorphic cameras (like DVS) naturally output sparse, asynchronous spikes.
-    *   **Objective:** Use the `Tonic` library to download and load the Neuromorphic-MNIST (N-MNIST) dataset. Feed these native events directly into your CSNN.
-    *   **Key APIs:** `tonic.datasets.NMNIST`, `tonic.transforms.ToFrame`.
-    *   **Reference:** [Tutorial 7: Neuromorphic Datasets](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html)
+*   [ ] **`10_neuromorphic_data_tonic.py`**: **Event-Based Cameras (DVS)**
+    *   **Concept:** DVS cameras naturally output sparse events.
+    *   **Objective:** Use `Tonic` to load N-MNIST. Feed native events into your CSNN.
+    *   **Deep Dive:** [Tutorial 7: Neuromorphic Datasets](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html).
+    *   **Key APIs:** `tonic.datasets.NMNIST`.
 
-*   [ ] **`10_recurrent_snn.py`**: **Temporal Memory (RSNNs)**
-    *   **Concept:** SNNs inherently have memory via membrane potential, but adding explicit recurrent weights allows them to learn complex temporal dynamics.
-    *   **Objective:** Implement `snntorch.RLeaky` or `snntorch.RSynaptic`. Train the network to recognize a sequence of inputs over time.
-    *   **Key APIs:** `snn.RLeaky`, `snn.RSynaptic`.
+*   [ ] **`11_recurrent_snn.py`**: **Temporal Memory (RSNNs)**
+    *   **Concept:** Explicit recurrent weights for complex temporal dynamics.
+    *   **Objective:** Implement `snn.RLeaky`. Train it to recognize a sequence.
+    *   **Deep Dive:** [snnTorch Documentation: Recurrent Layers](https://snntorch.readthedocs.io/en/latest/snntorch.html#recurrent-layers).
 
-### Part 4: Optimization, Regularization, and Local Learning
-Refining the network for deployment on neuromorphic hardware and exploring biological learning rules.
+### Part 4: Optimization & Local Learning
 
-*   [ ] **`11_loss_and_regularization.py`**: **Sparsity & Power Efficiency**
-    *   **Concept:** Spikes cost energy on neuromorphic hardware. We want to penalize excessive firing while maintaining accuracy.
-    *   **Objective:** Update your training loop to include L1/L2 regularization on the hidden layer spike counts. Explore Latency Loss (forcing the network to decide quickly).
-    *   **Key APIs:** `snntorch.functional.reg.l1_rate_sparsity`, `snntorch.functional.mse_membrane_loss`.
+*   [ ] **`12_loss_and_regularization.py`**: **Sparsity & Power Efficiency**
+    *   **Concept:** Penalize excessive firing to improve energy efficiency.
+    *   **Objective:** Add L1/L2 spike regularization to your training loop.
+    *   **Deep Dive:** [snnTorch Documentation: Regularization](https://snntorch.readthedocs.io/en/latest/snntorch.functional.html#regularization).
 
-*   [ ] **`12_stdp_online_learning.py`**: **Spike-Timing-Dependent Plasticity**
-    *   **Concept:** Biological brains don't use BPTT. They use local learning rules based on the timing of spikes (STDP). "Neurons that fire together wire together."
-    *   **Objective:** Use the `snntorch.stdp` module to implement unsupervised learning. Update weights step-by-step during the forward pass based on pre- and post-synaptic spike timings.
+*   [ ] **`13_stdp_online_learning.py`**: **STDP Plasticity**
+    *   **Concept:** Local learning: "Neurons that fire together wire together."
+    *   **Objective:** Implement unsupervised STDP weight updates.
+    *   **Deep Dive:** [snn.stdp Documentation](https://snntorch.readthedocs.io/en/latest/snntorch.stdp.html).
     *   **Key APIs:** `snntorch.stdp.STDP`.
 
-*   [ ] **`13_ann_to_snn.py`**: **Fast-Tracking with Conversion**
-    *   **Concept:** Training SNNs is slow. Often, it's faster to train a standard ReLU-based ANN and convert it to an SNN for low-power inference.
-    *   **Objective:** Train a standard PyTorch CNN on MNIST. Swap the ReLU activations for `snn.Leaky` neurons and observe how "Simulation Time" impacts accuracy.
-    *   **Reference:** [Tutorial 7: ANN-to-SNN Conversion](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html)
+*   [ ] **`14_ann_to_snn.py`**: **Conversion vs. Training**
+    *   **Concept:** Fast-track SNN development by converting pre-trained ANNs.
+    *   **Objective:** Convert a ReLU-CNN to an SNN and compare performance.
+    *   **Deep Dive:** [snnTorch Documentation: ANN-to-SNN](https://snntorch.readthedocs.io/en/latest/snntorch.utils.html#ann-to-snn-conversion).
 
-*   [ ] **`14_synops_benchmarking.py`**: **Calculating Energy Efficiency**
-    *   **Concept:** How much power does your SNN actually save? We measure this using Synaptic Operations (SynOps).
-    *   **Objective:** Compare the total number of operations in your Lesson 08 CSNN vs. a standard CNN. Visualize the "Sparsity vs. Accuracy" trade-off.
-
-*   [ ] **`15_export_nir.py`**: **Neuromorphic Intermediate Representation**
-    *   **Concept:** To run a model on actual neuromorphic hardware (like Loihi or SpiNNaker), it needs to be exported from PyTorch.
-    *   **Objective:** Export your trained CSNN to the NIR format, demonstrating readiness for hardware deployment.
-    *   **Key APIs:** `snntorch.export_nir`.
+*   [ ] **`15_energy_and_export.py`**: **SynOps & NIR Export**
+    *   **Concept:** Measure energy (Synaptic Operations) and export to hardware (NIR).
+    *   **Objective:** Benchmark your CSNN and export to `.nir` format.
+    *   **Deep Dive:** [NIR Documentation](https://neuromorphic-intermediate-representation.readthedocs.io/).
 
 ---
 
-## Capstone Projects: Real-World Applications
+## Capstone Projects
 
-These projects move beyond MNIST and into complex, dynamic environments.
-
-### Project A: Neuromorphic Pong (Reinforcement Learning)
-*   **The Goal:** Build an SNN that learns to play Pong from raw pixels (or DVS events).
-*   **Challenge:** The game speed increases over time. The network must adapt its temporal integration to handle faster motion.
-*   **Implementation:** Use Policy Gradients (REINFORCE) or Deep Q-Learning adapted for spikes.
-*   **Online Learning:** Explore using STDP-modulated weights or continuous BPTT to keep the agent learning *while* playing against itself.
-
-### Project B: Event-Based Keyword Spotting (KWS)
-*   **The Goal:** Real-time audio processing using spikes.
-*   **The Dataset:** Use the `SHHD` (Spiking Heidelberg Digits) dataset via `Tonic`.
-*   **Challenge:** Classify spoken words ("zero" through "nine") from a continuous stream of audio spikes with minimal latency and high energy efficiency.
-
-### Project C: Predictive Maintenance (Anomaly Detection)
-*   **The Goal:** Use an RSNN to monitor a simulated industrial sensor stream.
-*   **Challenge:** The network must learn the "normal" temporal pattern of a machine and fire a "critical spike" immediately when a vibration anomaly is detected, simulating a low-latency safety cutoff.
+*   **Project A: Neuromorphic Pong (RL):** Policy Gradients with spikes to play Pong.
+*   **Project B: Keyword Spotting (KWS):** Audio processing using the `SHHD` dataset.
+*   **Project C: Anomaly Detection:** RSNN for industrial sensor streams.
