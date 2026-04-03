@@ -125,7 +125,37 @@ Refining the network for deployment on neuromorphic hardware and exploring biolo
     *   **Objective:** Use the `snntorch.stdp` module to implement unsupervised learning. Update weights step-by-step during the forward pass based on pre- and post-synaptic spike timings.
     *   **Key APIs:** `snntorch.stdp.STDP`.
 
-*   [ ] **`13_export_nir.py`**: **Neuromorphic Intermediate Representation**
+*   [ ] **`13_ann_to_snn.py`**: **Fast-Tracking with Conversion**
+    *   **Concept:** Training SNNs is slow. Often, it's faster to train a standard ReLU-based ANN and convert it to an SNN for low-power inference.
+    *   **Objective:** Train a standard PyTorch CNN on MNIST. Swap the ReLU activations for `snn.Leaky` neurons and observe how "Simulation Time" impacts accuracy.
+    *   **Reference:** [Tutorial 7: ANN-to-SNN Conversion](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html)
+
+*   [ ] **`14_synops_benchmarking.py`**: **Calculating Energy Efficiency**
+    *   **Concept:** How much power does your SNN actually save? We measure this using Synaptic Operations (SynOps).
+    *   **Objective:** Compare the total number of operations in your Lesson 08 CSNN vs. a standard CNN. Visualize the "Sparsity vs. Accuracy" trade-off.
+
+*   [ ] **`15_export_nir.py`**: **Neuromorphic Intermediate Representation**
     *   **Concept:** To run a model on actual neuromorphic hardware (like Loihi or SpiNNaker), it needs to be exported from PyTorch.
     *   **Objective:** Export your trained CSNN to the NIR format, demonstrating readiness for hardware deployment.
     *   **Key APIs:** `snntorch.export_nir`.
+
+---
+
+## Capstone Projects: Real-World Applications
+
+These projects move beyond MNIST and into complex, dynamic environments.
+
+### Project A: Neuromorphic Pong (Reinforcement Learning)
+*   **The Goal:** Build an SNN that learns to play Pong from raw pixels (or DVS events).
+*   **Challenge:** The game speed increases over time. The network must adapt its temporal integration to handle faster motion.
+*   **Implementation:** Use Policy Gradients (REINFORCE) or Deep Q-Learning adapted for spikes.
+*   **Online Learning:** Explore using STDP-modulated weights or continuous BPTT to keep the agent learning *while* playing against itself.
+
+### Project B: Event-Based Keyword Spotting (KWS)
+*   **The Goal:** Real-time audio processing using spikes.
+*   **The Dataset:** Use the `SHHD` (Spiking Heidelberg Digits) dataset via `Tonic`.
+*   **Challenge:** Classify spoken words ("zero" through "nine") from a continuous stream of audio spikes with minimal latency and high energy efficiency.
+
+### Project C: Predictive Maintenance (Anomaly Detection)
+*   **The Goal:** Use an RSNN to monitor a simulated industrial sensor stream.
+*   **Challenge:** The network must learn the "normal" temporal pattern of a machine and fire a "critical spike" immediately when a vibration anomaly is detected, simulating a low-latency safety cutoff.

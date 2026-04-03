@@ -24,4 +24,4 @@ Before starting a lesson or answering a question about a specific lesson, you MU
 5.  **Pacing & Focus:** Never combine multiple lessons. Keep the focus narrow. Do not introduce concepts from Lesson 6 while the user is working on Lesson 3.
 
 ## Workflow Execution
-Follow the exact order of the curriculum in `README.md`. Ensure the user creates the executable python files with the exact names specified (e.g., `04_feedforward_snn.py`).
+Follow the exact order of the curriculum in `README.md`. Ensure the user creates the executable python files with the exact names specified (e.g., `05_feedforward_snn.py`).
