@@ -66,6 +66,7 @@ uv pip install akida cnn2snn
 ### Part 1: Foundations & Real-World Sensing
 
 *   **`00_environment_test.py`**: **Environment & Hardware Verification**
+    *   **[Docs]**: [Tutorial 7: Backpropagation Through Time](https://snntorch.readthedocs.io/en/latest/tutorials/tutorial_7.html) (Focus on the introduction to BPTT and memory overhead)
     *   **Concept:** Ensuring the high-end Heterogeneous Stack (7900 XTX + Akida) is visible to the software. The script is already written and provided; **no coding is required by the student for this lesson**.
     *   **Objective:** Run the script to verify ROCm 7.2.1, PyTorch 2.9.1, and `snntorch` visibility. Confirm ~24GB VRAM availability.
     *   **Quiz Topics:** GPU vs. CPU acceleration in SNNs, VRAM management for temporal unrolling, ROCm/CUDA compatibility layers.
