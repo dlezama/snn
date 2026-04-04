@@ -1,29 +1,39 @@
 import torch
 import snntorch as snn
+import sys
+import os
 
 def test_hardware():
     print("--- Hardware Verification ---")
     print(f"PyTorch version: {torch.__version__}")
-    print(f"CUDA/ROCm Available: {torch.cuda.is_available()}")
-    if torch.cuda.is_available():
+    
+    is_avail = torch.cuda.is_available()
+    print(f"CUDA/ROCm Available: {is_avail}")
+    
+    if is_avail:
         props = torch.cuda.get_device_properties(0)
         print(f"Active GPU: {props.name}")
         print(f"VRAM Capacity: {props.total_memory / 1024**3:.2f} GB")
     
     # 2. Simple snnTorch test
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if is_avail else "cpu")
+    
     try:
         x = torch.ones(10).to(device)
         print(f"\nTensor successfully moved to: {x.device}")
 
         lif = snn.Leaky(beta=0.9).to(device)
         mem = lif.init_leaky()
-        # If mem is a tensor, ensure it's on the right device
+        
         if isinstance(mem, torch.Tensor):
             mem = mem.to(device)
 
         spk, mem = lif(x, mem)
         print(f"snnTorch neuron initialized and processed a spike on {device}.")
+        
+        # Explicitly delete tensors to prevent ROCm context deadlocks
+        del x, spk, mem, lif
+        
     except Exception as e:
         print(f"\n[Error during GPU operations]: {e}")
 
@@ -50,7 +60,13 @@ def test_hardware():
     except Exception as e:
         print(f"[Akida Error]: {e}")
 
-    print("\n--- Readiness Check Passed ---")
+    # Clean up ROCm/CUDA context to prevent hangs on Windows
+    if is_avail:
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
+
+    sys.stdout.flush()
+    os._exit(0)
 
 if __name__ == "__main__":
     test_hardware()
