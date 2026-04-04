@@ -15,21 +15,15 @@ This journal documents my progress through the [snnTorch](https://github.com/jes
 
 ## 📖 Log Entries
 
-### [2026-04-02] - The Neuromorphic Reset
-*   **Status:** Initialized Curriculum & Teacher Mandates.
-*   **Key Concepts:**
-    *   **Temporal vs. Spatial:** Learned that SNNs process information in time, not just space.
-    *   **The Silicon Retina:** Discovered the link between DVS cameras and biological eye processing (asynchronous events vs. synchronous frames).
-    *   **The Leaky Bucket:** Introduced to the Leaky Integrate-and-Fire (LIF) model.
-*   **Side Quests:**
-    *   Explored the capabilities of the BrainChip Akida AKD1000 for ultra-low-power deployment.
-    *   Discussed the integration of `v2e` for event-based simulation on the 7900 XTX.
+### [2026-04-04] - Course Initialized
+*   **Status:** Ready to Start.
 *   **Milestones:**
-    *   [x] Repo initialized and curriculum refined for high-end AMD hardware.
-    *   [ ] Lesson 01: The "Hello World" of SNNs (In Progress).
+    *   [x] Environment verified with `00_environment_test.py`.
+    *   [x] Curriculum refined with `snnbook.net` (2026.04.04) and hardware-specific goals.
+    *   [x] Instructor instructions (`GEMINI.md`) optimized for Socratic teaching.
 
 ---
 
 ## 🚀 Side Quest Notes
-*   **Akida Integration:** Plan to use the Akida card earlier in the course for "Hardware Cross-Checks" (Lessons 03, 06, 13).
-*   **High-Resolution Scaling:** Modified the course to include Spiking ResNets and Transformers to leverage the 24GB of VRAM on the 7900 XTX.
+*   **Akida Integration:** Plan to use the Akida card for "Hardware Cross-Checks" in Lessons 04, 08, 12, and 15.
+*   **High-Resolution Scaling:** Utilizing the 24GB VRAM on the 7900 XTX for deep BPTT and Spiking Transformers.
