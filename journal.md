@@ -15,7 +15,9 @@ This journal documents my progress through the [snnTorch](https://github.com/jes
 
 ## 📖 Log Entries
 
-(No entries yet. Ready to start Lesson 0!)
+*   **Lesson 0 Note**: The script `00_environment_test.py` is fully prepared and requires no additional coding. It is solely for hardware verification.
+
+(Ready to run Lesson 0!)
 
 ---
 
