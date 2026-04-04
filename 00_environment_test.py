@@ -40,11 +40,20 @@ def test_hardware():
     # 3. Akida Hardware Verification
     print("\n--- Akida Hardware Verification ---")
     try:
+        # Suppress TensorFlow INFO and WARNING logs, but KEEP ERRORS
+        import os
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # 0=all, 1=no INFO, 2=no INFO/WARN, 3=no INFO/WARN/ERROR
+        os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+        
+        import logging
+        logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
         import akida
         print(f"Akida version: {akida.__version__}")
 
         devices = akida.devices()
-        if len(devices) > 0:
+        has_hardware = len(devices) > 0
+        if has_hardware:
             print(f"Found {len(devices)} Akida device(s).")
             for i, dev in enumerate(devices):
                 print(f"  [{i}]: {dev.version}")
@@ -53,7 +62,11 @@ def test_hardware():
 
         import cnn2snn
         print(f"cnn2snn version: {cnn2snn.__version__}")
-        print("--- Akida Stack Ready ---")
+        
+        if has_hardware:
+            print("--- Akida Stack Ready (Hardware Accelerated) ---")
+        else:
+            print("--- Akida Stack Ready (Simulator Only) ---")
     except ImportError as e:
         print(f"[ImportError]: {e}")
         print("Ensure 'akida' and 'cnn2snn' are installed in the current environment.")

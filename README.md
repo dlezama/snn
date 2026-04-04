@@ -23,7 +23,41 @@ Before diving into code, it is highly recommended to skim these foundational res
 ---
 
 ## Environment Setup (AMD GPU / ROCm)
-(Refer to previous setup instructions for ROCm 7.2.1 and Python 3.12).
+This project uses `uv` and Python 3.12 for managing dependencies, specifically configured for AMD GPUs using ROCm on Windows.
+
+### 1. Create Virtual Environment
+```powershell
+uv venv --python 3.12
+.venv\Scripts\activate
+```
+
+### 2. Install ROCm SDK Components
+```powershell
+uv pip install --no-cache-dir `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_core-7.2.1-py3-none-win_amd64.whl `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_devel-7.2.1-py3-none-win_amd64.whl `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_libraries_custom-7.2.1-py3-none-win_amd64.whl `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm-7.2.1.tar.gz
+```
+
+### 3. Install PyTorch with ROCm Support
+```powershell
+uv pip install --no-cache-dir `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torch-2.9.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torchaudio-2.9.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl `
+    https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torchvision-0.24.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl
+```
+
+### 4. Install snnTorch & Utilities
+```powershell
+uv pip install snntorch matplotlib tonic
+```
+
+### 5. Install BrainChip Akida (MetaTF)
+To simulate and deploy to the AKD1000 M.2 card, install the MetaTF toolchain:
+```powershell
+uv pip install akida cnn2snn
+```
 
 ---
 
