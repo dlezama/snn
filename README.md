@@ -32,7 +32,8 @@ Before diving into code, it is highly recommended to skim these foundational res
 ### Part 1: Foundations & Real-World Sensing
 
 *   **`00_environment_test.py`**: **Environment & Hardware Verification**
-    *   **Concept:** Ensuring the high-end Heterogeneous Stack (7900 XTX + Akida) is visible to the software.
+    
+    *   **Concept:** Ensuring the high-end Heterogeneous Stack (7900 XTX + Akida) is visible to the software. The script is ready for the user to test the environment, the user has to run it.
     *   **Objective:** Verify ROCm 7.2.1, PyTorch 2.9.1, and `snntorch` visibility. Confirm ~24GB VRAM availability.
     *   **Quiz Topics:** GPU vs. CPU acceleration in SNNs, VRAM management for temporal unrolling, ROCm/CUDA compatibility layers.
 
