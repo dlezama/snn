@@ -1,0 +1,14 @@
+{
+    "python.terminal.activateEnvironment": false,
+    "terminal.integrated.profiles.windows": {
+        "Python Virtual Env (PowerShell)": {
+            "source": "PowerShell",
+            "args": [
+                "-NoExit",
+                "-Command",
+                "& '${workspaceFolder}\\.venv\\Scripts\\Activate.ps1'"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Python Virtual Env (PowerShell)"
+}
