@@ -15,12 +15,7 @@ This journal documents my progress through the [snnTorch](https://github.com/jes
 
 ## 📖 Log Entries
 
-### [2026-04-04] - Course Initialized
-*   **Status:** Ready to Start.
-*   **Milestones:**
-    *   [x] Environment verified with `00_environment_test.py`.
-    *   [x] Curriculum refined with `snnbook.net` (2026.04.04) and hardware-specific goals.
-    *   [x] Instructor instructions (`GEMINI.md`) optimized for Socratic teaching.
+(No entries yet. Ready to start Lesson 0!)
 
 ---
 
