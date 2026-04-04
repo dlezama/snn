@@ -1,1 +1,1 @@
-C:/users/damia/repos/snn/GEMINI.md
+GEMINI.md
