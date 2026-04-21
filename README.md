@@ -130,6 +130,47 @@ uv pip install akida cnn2snn
 
 ---
 
+## Environment Setup (Raspberry Pi / AKD1000)
+
+For running inference experiments on a Raspberry Pi 5 (aarch64) with an AKD1000 neuromorphic card. CPU-only PyTorch — no GPU on the Pi.
+
+### 0. Python Version Note
+Raspberry Pi OS Trixie ships Python 3.13 as the system default, but BrainChip's `akida` wheels target `cp310` / `cp311` / `cp312` manylinux_2_28 aarch64 only. Use Python 3.12 via `uv` so the system Python stays untouched.
+
+### 1. Install uv and Python 3.12
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+uv python install 3.12
+```
+
+### 2. Create Virtual Environment
+```bash
+uv venv --python 3.12 venv
+source venv/bin/activate
+```
+
+### 3. Install PyTorch (CPU)
+```bash
+uv pip install --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1
+```
+
+### 4. Install Remaining Dependencies
+```bash
+uv pip install -r requirements-pi.txt
+```
+
+`requirements-pi.txt` is the Pi-compatible subset of `env.txt`. It drops the ROCm SDK packages (x86_64-only), the `+rocm7.2.1` local tag on torch/torchvision/torchaudio, and `pyreadline3` (Windows-only). Everything else, including the full TensorFlow + Akida stack, stays at the same pinned versions.
+
+### 5. Verify Akida Detection
+```bash
+python 00_environment_test.py
+```
+Expected output includes `Akida version: 2.19.1` and `Found 1 Akida device(s)`. If the AKD1000 is absent, the test falls back to simulator-only mode — see CLAUDE.md for the implications.
+
+---
+
 ## The Course Curriculum
 
 ### Part 1: Neuroscience Foundations & Spike Representations
