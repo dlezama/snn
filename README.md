@@ -345,19 +345,50 @@ Part 4 covers the full breadth of modern SNN research: recurrence, local learnin
     *   **Objective:** Study the SpikeMamba architecture. Implement a simplified spiking SSM layer. Evaluate on a sequential task (Sequential MNIST or SHD). Discuss how P-SpikeSSM's probabilistic approach differs from deterministic spiking SSMs. Reflect on where the field is heading.
     *   **Quiz Topics:** What SSMs are and why Mamba matters, how spiking neurons fit into the SSM framework, O(1) inference complexity and why it matters for edge, deterministic vs. probabilistic spiking SSMs, SpikeGPT and the path to spiking language models, open research problems.
 
-### Capstone Project: End-to-End Neuromorphic Pipeline
+### Capstone Project: Spiking Game Agent
 
-**You have now covered the full landscape of modern SNN research.** The capstone project integrates everything into a single pipeline from data to deployed model.
+**You have now covered the full landscape of modern SNN research.** The capstone is a two-part project. **Part A** is the core deliverable: a spiking agent that plays Atari Pong, trained on the 7900 XTX and deployed to the Akida AKD1000 — the **efficiency story**. **Part B** is an optional stretch: take the same SNN family to one game on the [GameWorld benchmark](https://gameworld-project.github.io/) and go head-to-head with multimodal-LLM baselines on GPU — the **reactivity story**.
 
-*   **`capstone_project.py`**: **From Sensor to Silicon**
-    *   **Task:** Build a complete neuromorphic pipeline:
-        1.  **Data:** Choose a neuromorphic dataset (DVS128 Gesture, SHD, or CIFAR10-DVS).
-        2.  **Model:** Design and train a deep SNN (convolutional, recurrent, or hybrid). Justify your architecture choices.
-        3.  **Regularize:** Apply spike regularization to optimize the energy-accuracy tradeoff.
-        4.  **Export:** Export via NIR format.
-        5.  **Deploy:** Quantize (QAT) and deploy to Akida (or simulator).
-        6.  **Report:** Measure and report: test accuracy, total spike count, SynOps, estimated energy per inference, and latency. Compare GPU vs. Akida numbers.
-        7.  **Write-up:** A comprehensive analysis in `journal.md` covering design decisions, results, and lessons learned.
+The split is intentional. Pong is small enough to fit on the AKD1000's 20-NPU mesh; the latency and SynOps numbers there tell the neuromorphic-wins-on-power story. GameWorld perception needs a larger network than Akida will host, so Part B runs GPU-only and tells a different story: **LLMs are smart but slow; a spiking agent wins on reactivity.**
+
+#### Background reading (both parts)
+SNN + reinforcement learning is a distinct subfield not covered in lessons 01-20. Survey recent work on **spiking DQN** (Atari-scale RL with spiking Q-networks) and **PopSAN** (population-coded spiking actor networks) before designing your agent.
+
+#### Part A — `capstone_pong.py`: Pong to Silicon
+1.  **Environment.** [Gymnasium `ALE/Pong-v5`](https://gymnasium.farama.org/environments/atari/pong/). Canonical RL benchmark, microsecond-scale env step, no browser in the loop. Use the standard Atari wrapper stack (frame skip, grayscale, 84×84, frame stack = 4).
+2.  **Perception.** Convert frames to spikes via one of:
+    *   Grayscale frames → spiking CNN (lesson 10) with rate or delta encoding (lesson 02), *or*
+    *   Frames → v2e event synthesis (lesson 04) → event-driven SNN on binned events (lesson 11).
+
+    Justify the choice. The v2e path is more faithful to neuromorphic deployment; the direct path is simpler and closer to the published spiking-DQN literature.
+3.  **Policy.** Small spiking CNN (lesson 10) or conv+recurrent hybrid (lesson 13). The Q-head (DQN) or action head (BC / conversion) emits spike rates that map to Pong's three discrete actions.
+4.  **Training strategy.** Pick one:
+    *   **ANN-to-SNN conversion** (lesson 16) of a conventional DQN you train first. Shortest path to "something that plays Pong."
+    *   **Behavior cloning** from a trained ANN DQN's rollouts.
+    *   **Spiking DQN** with replay buffer and target network. Hardest, most faithful.
+5.  **Regularize for sparsity** (lesson 14). The AKD1000 has limited on-chip memory and thrives on sparse activations.
+6.  **Quantize and deploy.** QAT to 4-bit or 2-bit (lesson 19), export, run on the AKD1000. Fall back to the Akida simulator if hardware is unavailable — see CLAUDE.md's Akida-Absent Fallback.
+7.  **Benchmark.** Report mean episode reward (Pong's −21 to +21 scale), SynOps per decision, and **end-to-end latency** (frame capture → perception → policy → action). Compare AKD1000 hardware vs. Akida simulator vs. GPU simulation.
+8.  **Write-up in `journal.md`.** Architecture, training curves, accuracy-vs-spike-count Pareto, latency breakdown, ablations, and a frank discussion of what worked and what didn't.
+
+#### Realistic bar for Part A
+Mean reward **+5 to +21** on Pong, deployed to the AKD1000 with **sub-50ms end-to-end latency**, is a strong capstone outcome. Hitting +21 (never losing a point) via ANN-to-SNN conversion of a well-trained DQN is within reach; training a spiking DQN from scratch to the same level is research-grade.
+
+---
+
+#### Part B (stretch) — `capstone_gameworld.py`: One Runner, GPU-Only
+Only attempt after Part A is working and deployed.
+
+1.  **Pick one Runner-genre game** from the [GameWorld](https://gameworld-project.github.io/) benchmark. Runners reward reactive control and obstacle avoidance — the regime where SNNs are competitive. Platformer / Puzzle / Simulation are out of scope (they need planning and working memory beyond what a vanilla SNN delivers).
+2.  **Target the real-time variant (GameWorld-RT).** The standard variant lets LLM agents take seconds per decision; the RT variant penalizes latency. This is the only track where an SNN has an honest shot at competing with the LLM baselines.
+3.  **Bridge the environment.** Connect GameWorld's Playwright runtime to a Python control loop via the low-level Computer-Use interface (keyboard/mouse). See the [GameWorld repo](https://github.com/gameworld-dev/gameworld) — note its educational/research-only license.
+4.  **Scale up the Part A perception/policy stack** for real browser frames. The 7900 XTX (24GB VRAM) hosts a much deeper spiking CNN than Akida would; lean on that.
+5.  **GPU-only inference.** No Akida deployment in Part B. The efficiency story stayed in Part A; Part B is about **reactivity** — milliseconds per decision vs. the LLMs' seconds.
+6.  **Benchmark** against GameWorld-RT's Success Rate and Progress metrics. Report end-to-end wall-clock latency alongside accuracy — the tight coupling is the whole point.
+7.  **Write-up addendum in `journal.md`:** what changed when scaling from Pong to a browser game, where the SNN held up, where it broke, and where the LLM baselines still won.
+
+#### Realistic bar for Part B
+Matching the median LLM baseline on one Runner-RT game is a strong stretch outcome. Beating all LLM baselines on that game because they time out under the real-time constraint is defensible and publication-adjacent — aspirational, not required.
 
 ---
 
