@@ -6,12 +6,19 @@ This journal documents progress through the SNN curriculum defined in `README.md
 
 ## Hardware & Environment Setup
 
-*   **Operating System:** Windows 11 (win32)
-*   **Training GPU:** AMD Radeon RX 7900 XTX (24GB VRAM)
-*   **Environment:** Python 3.12 (via `uv`) with ROCm 7.2.1 support
-*   **Deployment Hardware:** BrainChip Akida AKD1000 M.2 Card
-*   **Akida Status:** [To be confirmed in Lesson 00: Hardware Detected / Simulator-Only]
-*   **Sensing Strategy:** v2e (Video-to-Events) Simulation
+**Training host (Windows)**
+*   **OS:** Windows 11 (win32)
+*   **GPU:** AMD Radeon RX 7900 XTX (24 GB VRAM)
+*   **Environment:** Python 3.12 (via `uv`) with ROCm 7.2.1
+
+**Deployment host (Raspberry Pi 5)**
+*   **OS:** Raspberry Pi OS Trixie, kernel `6.12.75+rpt-rpi-2712` (arm64)
+*   **CPU-only PyTorch:** `torch 2.9.1+cpu` + snnTorch 0.9.4 in Python 3.12 venv
+*   **Akida hardware:** BrainChip AKD1000 M.2, detected as `BC.00.000.002` (hardware, not simulator) on 2026-04-21
+*   **Akida stack:** `akida` / `cnn2snn` 2.19.1, TensorFlow 2.19.1
+*   **Kernel driver:** `akida_pcie` (built from [Brainchip-Inc/akida_dw_edma](https://github.com/Brainchip-Inc/akida_dw_edma)) — **requires a local Makefile patch** to build on kernel 6.12; see Lesson 00 discoveries below
+
+**Sensing Strategy:** v2e (Video-to-Events) Simulation
 
 ---
 
@@ -31,12 +38,16 @@ Use this template for each lesson:
 
 ---
 
-### Lesson 00: Environment & Hardware Verification — [pending]
-*   **Reading Completed:** [pending]
-*   **Quiz Score:** [pending]
-*   **Code:** `00_environment_test.py` — provided (no coding required)
-*   **Key Insight:** [pending]
-*   **Discoveries:** [pending]
+### Lesson 00: Environment & Hardware Verification — 2026-04-21 (pi setup; quiz pending)
+*   **Reading Completed:** N/A (setup-only lesson)
+*   **Quiz Score:** [pending — to be administered before lesson is marked complete]
+*   **Code:** `00_environment_test.py` — ran on Raspberry Pi 5, all checks passed (PyTorch 2.9.1+cpu, snnTorch 0.9.4, Akida 2.19.1, cnn2snn 2.19.1, `Found 1 Akida device(s): BC.00.000.002`)
+*   **Key Insight:** AKD1000 detection is gated on an out-of-tree PCIe kernel driver, not just the userspace wheel — without `akida_pcie` loaded, `lspci` sees the card but its memory BARs stay `[disabled]` and `akida.devices()` returns empty.
+*   **Discoveries:**
+    *   BrainChip's [`akida_dw_edma`](https://github.com/Brainchip-Inc/akida_dw_edma) repo does **not** use DKMS — the repo name refers to the embedded DesignWare eDMA engine, but the install path is a plain `./install.sh` wrapping `make` + `modprobe akida-pcie`. The loaded module is named `akida_pcie`, not `akida_dw_edma`. Our README originally documented a nonexistent DKMS path; corrected in this commit.
+    *   The driver Makefile's `AKIDA_KERNEL_VERSION_RANK` table tops out at kernel 6.9. Raspberry Pi OS Trixie ships 6.12, which trips `$(error Kernel 6.12 not supported)` before any C compiles. Fixed with a local patch (see `patches/akida_dw_edma-kernel-6.12.patch`) that extends the table to `[6.9, 6.13)` and maps it to the 5.16 header set. Built cleanly against kernel `6.12.75+rpt-rpi-2712`; two harmless `-Wmissing-prototypes` warnings, no errors.
+    *   The Makefile has explicit `CONFIG_ARCH_BCM2835` handling that forces 32-bit PCIe accesses on Pi hardware (BrainChip documents this as a Compute Module 4 workaround). It fires automatically on the Pi 5 kernel and is the reason the `#pragma message "PCIe 64bit accesses forced to 32bit accesses"` appears in the build log. Keep an eye on this for Lesson 12 / Lesson 19 — it may affect peak PCIe DMA throughput numbers on the Pi vs. published AKD1000 benchmarks (which assume 64-bit hosts).
+    *   `99-akida-pcie.rules` chmods `/dev/akida0` to 0666. Fine for this single-user Pi; edit the rules file before install if you want stricter access.
 
 ---
 

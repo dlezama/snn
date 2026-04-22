@@ -1,0 +1,30 @@
+diff --git a/Makefile b/Makefile
+index 8a79258..caea0a7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,7 +5,7 @@ ifneq ($(KERNELRELEASE),)
+ # copied in kernel/x.y/ subdirectory depending on kernel API changes.
+ # These files are drivers/dma/dmaengine.h and drivers/dma/virt-dma.h
+ AKIDA_KERNEL_VERSION_RANK := $(shell \
+-	printf "$(VERSION).$(PATCHLEVEL)\n5.4\n5.6\n5.7\n5.9\n5.16\n6.9\n" | \
++	printf "$(VERSION).$(PATCHLEVEL)\n5.4\n5.6\n5.7\n5.9\n5.16\n6.9\n6.13\n" | \
+ 	sort -V )
+ 
+ ifneq ($(word 1,$(AKIDA_KERNEL_VERSION_RANK)), 5.4)
+@@ -45,6 +45,16 @@ akida-pcie-y += akida-dw-edma/dw-edma-v0-core.o
+ akida-pcie-y += akida-dw-edma/dw-edma-v0-debugfs.o
+ akida-pcie-y += akida-dw-edma/dw-hdma-v0-core.o
+ akida-pcie-y += akida-dw-edma/dw-hdma-v0-debugfs.o
++else ifneq ($(word 7,$(AKIDA_KERNEL_VERSION_RANK)), 6.13)
++# Local patch: map kernels in [6.9, 6.13) (incl. Raspberry Pi OS Trixie 6.12.x)
++# onto the 5.16 header set. Unvalidated upstream; remove if BrainChip adds
++# native support for this range.
++ccflags-y += -I$(src)/kernel/5.16/drivers/dma
++akida-pcie-y += akida-dw-edma/dw-edma-core.o
++akida-pcie-y += akida-dw-edma/dw-edma-v0-core.o
++akida-pcie-y += akida-dw-edma/dw-edma-v0-debugfs.o
++akida-pcie-y += akida-dw-edma/dw-hdma-v0-core.o
++akida-pcie-y += akida-dw-edma/dw-hdma-v0-debugfs.o
+ else
+ $(error Kernel $(VERSION).$(PATCHLEVEL) not supported. Some incompatibilities can be present)
+ endif

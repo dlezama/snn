@@ -163,11 +163,49 @@ uv pip install -r requirements-pi.txt
 
 `requirements-pi.txt` is the Pi-compatible subset of `env.txt`. It drops the ROCm SDK packages (x86_64-only), the `+rocm7.2.1` local tag on torch/torchvision/torchaudio, and `pyreadline3` (Windows-only). Everything else, including the full TensorFlow + Akida stack, stays at the same pinned versions.
 
-### 5. Verify Akida Detection
+### 5. Install the AKD1000 PCIe Kernel Driver
+
+The `akida` Python wheel is userspace only — it talks to the AKD1000 through an out-of-tree kernel module BrainChip ships as source in the [`akida_dw_edma`](https://github.com/Brainchip-Inc/akida_dw_edma) repo. The repo name refers to the embedded DesignWare eDMA engine; the loaded module is actually named **`akida_pcie`** (built as `akida-pcie.ko`). Without this driver the chip enumerates on PCIe but its memory regions stay disabled, no `/dev/akida0` is created, and `akida.devices()` returns an empty list.
+
+Confirm the card is visible on PCIe before going further:
+```bash
+lspci | grep -i brainchip
+# Expected: Co-processor: Brainchip Inc AKD1000 Neural Network Coprocessor [Akida]
+```
+
+Install build prerequisites (kernel headers matching your running kernel):
+```bash
+sudo apt update
+sudo apt install -y build-essential linux-headers-$(uname -r)
+```
+On Raspberry Pi OS the headers package is `raspberrypi-kernel-headers` if `linux-headers-$(uname -r)` is unavailable. DKMS is **not** used — the repo ships a plain `Makefile` + `install.sh`.
+
+**Kernel version compatibility.** Check `Makefile` in the cloned repo — the `AKIDA_KERNEL_VERSION_RANK` list names the supported kernels. As of this writing it tops out at **6.9**. The Raspberry Pi OS Trixie kernel (6.12.x) is newer and will fail the Makefile's version check with `Kernel 6.12 not supported.` This repo ships a validated patch for that case at [`patches/akida_dw_edma-kernel-6.12.patch`](patches/akida_dw_edma-kernel-6.12.patch), which extends the table to cover `[6.9, 6.13)` and maps it to the 5.16 header set. Confirmed compiling cleanly against kernel `6.12.75+rpt-rpi-2712` on 2026-04-21 (see `journal.md` Lesson 00 for details and caveats). If you're on a kernel outside both upstream's list and this patch's range, fall back to Akida simulator-only mode per CLAUDE.md's Akida-Absent Fallback.
+
+Build, install, and load the driver:
+```bash
+git clone https://github.com/Brainchip-Inc/akida_dw_edma.git
+cd akida_dw_edma
+# On Raspberry Pi OS Trixie (kernel 6.12.x), apply the compatibility patch first:
+git apply /path/to/snn/patches/akida_dw_edma-kernel-6.12.patch
+./install.sh
+```
+The script runs `make`, copies `akida-pcie.ko` into `/lib/modules/$(uname -r)/kernel/drivers/`, appends `akida_pcie` to `/etc/modules` for autoload, installs `99-akida-pcie.rules` (which chmods `/dev/akida*` to 666 for every user — edit the rules file first if you want stricter permissions), and runs `depmod`, `modprobe akida-pcie`, and `udevadm trigger`. It calls `sudo` internally and will prompt for your password.
+
+Verify the module loaded and the device node exists:
+```bash
+lsmod | grep akida          # akida_pcie should appear
+ls /dev/akida0              # character device should now exist
+lspci -vv -s $(lspci | grep -i brainchip | awk '{print $1}') | grep Region
+# Memory regions should now be enabled (no longer "[disabled]")
+```
+A reboot is recommended after the first install so udev rules apply cleanly. Re-run `./install.sh` after any kernel update.
+
+### 6. Verify Akida Detection
 ```bash
 python 00_environment_test.py
 ```
-Expected output includes `Akida version: 2.19.1` and `Found 1 Akida device(s)`. If the AKD1000 is absent, the test falls back to simulator-only mode — see CLAUDE.md for the implications.
+Expected output includes `Akida version: 2.19.1` and `Found 1 Akida device(s)`. If the AKD1000 is absent or the kernel driver could not be installed, the test falls back to simulator-only mode — see CLAUDE.md for the implications.
 
 ---
 
