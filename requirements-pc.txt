@@ -1,5 +1,7 @@
-# Raspberry Pi 5 / aarch64 / Python 3.12. See README.txt for setup.
-# PyTorch must be installed first from https://download.pytorch.org/whl/cpu.
+# Windows / x86_64 / Python 3.12 with ROCm 7.2.1. See README.md for setup.
+# The ROCm SDK wheels and ROCm-tagged PyTorch wheels must be installed first
+# (see README steps 3 and 4) — they pull torch==2.9.1+rocm7.2.1, which
+# satisfies the torch==2.9.1 pin below without reinstalling from PyPI.
 
 numpy==2.1.3
 scipy==1.17.1
@@ -23,6 +25,7 @@ filelock==3.25.2
 fsspec==2026.3.0
 packaging==26.0
 typing_extensions==4.15.0
+pyreadline3==3.5.4
 tqdm==4.67.3
 importRosbag==1.0.4
 pbr==7.0.3

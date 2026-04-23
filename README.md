@@ -90,17 +90,23 @@ Organized by topic. You will be pointed to specific papers before relevant lesso
 
 ---
 
-## Environment Setup (AMD GPU / ROCm)
+## Environment Setup (AMD GPU / ROCm on Windows)
 
-This project uses `uv` and Python 3.12 for managing dependencies, specifically configured for AMD GPUs using ROCm on Windows.
+For the Windows training host (AMD 7900 XTX). Uses `uv` and Python 3.12 with ROCm 7.2.1. The Akida MetaTF stack (TensorFlow + `akida` + `cnn2snn`) is installed on this host too, so the same environment can simulate AKD1000 inference and export `.fbz` artifacts for deployment to the Pi.
 
-### 1. Create Virtual Environment
+### 1. Install uv and Python 3.12
 ```powershell
-uv venv --python 3.12
-.venv\Scripts\activate
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv python install 3.12
 ```
 
-### 2. Install ROCm SDK Components
+### 2. Create Virtual Environment
+```powershell
+uv venv --python 3.12 venv
+venv\Scripts\activate
+```
+
+### 3. Install ROCm SDK Components
 ```powershell
 uv pip install --no-cache-dir `
     https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm_sdk_core-7.2.1-py3-none-win_amd64.whl `
@@ -109,7 +115,7 @@ uv pip install --no-cache-dir `
     https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/rocm-7.2.1.tar.gz
 ```
 
-### 3. Install PyTorch with ROCm Support
+### 4. Install PyTorch with ROCm Support
 ```powershell
 uv pip install --no-cache-dir `
     https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torch-2.9.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl `
@@ -117,16 +123,24 @@ uv pip install --no-cache-dir `
     https://repo.radeon.com/rocm/windows/rocm-rel-7.2.1/torchvision-0.24.1%2Brocm7.2.1-cp312-cp312-win_amd64.whl
 ```
 
-### 4. Install snnTorch & Utilities
+### 5. Install Remaining Dependencies
 ```powershell
-uv pip install snntorch matplotlib tonic
+uv pip install -r requirements-pc.txt
 ```
 
-### 5. Install BrainChip Akida (MetaTF)
-To simulate and deploy to the AKD1000 M.2 card, install the MetaTF toolchain:
+`requirements-pc.txt` is the Windows-x86_64 analogue of `requirements-pi.txt`. It pins the same versions (snnTorch, TensorFlow, the full Akida / MetaTF stack, ONNX, matplotlib, `tqdm` and `importRosbag` for tonic, etc.), adds `pyreadline3` (Windows-only), and omits the ROCm SDK wheels and the `+rocm7.2.1` local tag on torch/torchvision/torchaudio — those are installed by steps 3 and 4 above, and the plain `torch==2.9.1` pin is satisfied by the already-installed `2.9.1+rocm7.2.1` wheel.
+
+### 6. Install tonic (Lesson 11)
 ```powershell
-uv pip install akida cnn2snn
+uv pip install --no-deps tonic==1.6.0
 ```
+`--no-deps` is required: tonic 1.6.0 pins `numpy<2.0` in its metadata (defensive, for its optional `torch==2.3.0` extra — see commits [`91f3e92`](https://github.com/neuromorphs/tonic/commit/91f3e92) and [`59d2ad9`](https://github.com/neuromorphs/tonic/commit/59d2ad9)), which would conflict with our `numpy==2.1.3`. The actual tonic source on `develop` (last push 2026-03-18) is clean of numpy-2-removed APIs, and its real runtime deps — `tqdm`, `importRosbag`, `pbr`, `numpy`, `h5py`, `scipy`, `typing_extensions` — are already satisfied by `requirements-pc.txt`. (`pbr` is only needed because PyPI 1.6.0's `tonic/__init__.py` still does `from pbr.version import VersionInfo`; `develop` has migrated to `importlib.metadata` but no release has been cut since.) `librosa` and `expelliarmus` are only needed for audio datasets / `audio_transforms` (lazy-imported); add them at Lesson 11 if the SHD/SSC exercises are in scope.
+
+### 7. Verify the Stack
+```powershell
+python 00_environment_test.py
+```
+Expected output: `CUDA/ROCm Available: True`, the 7900 XTX reported with ~24 GB VRAM, snnTorch running a Leaky neuron on `cuda`, and the Akida stack reporting version 2.19.1. On the Windows host `akida.devices()` returns an empty list (the AKD1000 lives on the Pi) — the test falls through to simulator-only mode, which is the intended state for this host.
 
 ---
 
@@ -161,9 +175,15 @@ uv pip install --index-url https://download.pytorch.org/whl/cpu \
 uv pip install -r requirements-pi.txt
 ```
 
-`requirements-pi.txt` is the Pi-compatible subset of `env.txt`. It drops the ROCm SDK packages (x86_64-only), the `+rocm7.2.1` local tag on torch/torchvision/torchaudio, and `pyreadline3` (Windows-only). Everything else, including the full TensorFlow + Akida stack, stays at the same pinned versions.
+`requirements-pi.txt` is the Pi-compatible subset of `env.txt`. It drops the ROCm SDK packages (x86_64-only), the `+rocm7.2.1` local tag on torch/torchvision/torchaudio, and `pyreadline3` (Windows-only), and adds `tqdm` and `importRosbag` (tonic's only non-already-pinned eager runtime deps). Everything else, including the full TensorFlow + Akida stack, stays at the same pinned versions.
 
-### 5. Install the AKD1000 PCIe Kernel Driver
+### 5. Install tonic (Lesson 11)
+```bash
+uv pip install --no-deps tonic==1.6.0
+```
+Same `--no-deps` rationale as the Windows host: tonic 1.6.0's `numpy<2.0` metadata pin is defensive (tied to its optional `torch==2.3.0` extra), not a source-level incompatibility. Our `numpy==2.1.3` + `torch==2.9.1` combination works fine with tonic's actual code. See the PC section for the full explanation.
+
+### 6. Install the AKD1000 PCIe Kernel Driver
 
 The `akida` Python wheel is userspace only — it talks to the AKD1000 through an out-of-tree kernel module BrainChip ships as source in the [`akida_dw_edma`](https://github.com/Brainchip-Inc/akida_dw_edma) repo. The repo name refers to the embedded DesignWare eDMA engine; the loaded module is actually named **`akida_pcie`** (built as `akida-pcie.ko`). Without this driver the chip enumerates on PCIe but its memory regions stay disabled, no `/dev/akida0` is created, and `akida.devices()` returns an empty list.
 
@@ -201,7 +221,7 @@ lspci -vv -s $(lspci | grep -i brainchip | awk '{print $1}') | grep Region
 ```
 A reboot is recommended after the first install so udev rules apply cleanly. Re-run `./install.sh` after any kernel update.
 
-### 6. Verify Akida Detection
+### 7. Verify Akida Detection
 ```bash
 python 00_environment_test.py
 ```

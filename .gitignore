@@ -1,0 +1,22 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-local scratch
+/temp/
+
+# Claude Code per-user state (tool permissions, etc.)
+.claude/
